@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BF: GO</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#0c1618;--fg:#f4efe6;--hot:#ff6a2b;--sea:#19c3b1;--gold:#ffd23f;--panel:#122428;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:"Trebuchet MS",system-ui,sans-serif;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:16px;z-index:5;overflow:auto}
+.scr.on{display:flex}
+#cover{background:linear-gradient(160deg,#0c1618 30%,#17454a 70%,#ff6a2b 140%)}
+#cover h1{font-size:76px;line-height:.9;margin:0;font-weight:900;letter-spacing:-3px;transform:skewX(-8deg)}
+#cover h1 span{color:var(--hot)}
+.sub{opacity:.8;margin:0}
+.blink{animation:b 1.2s infinite}@keyframes b{50%{opacity:.3}}
+button{font:inherit;font-weight:800;font-size:19px;padding:12px 30px;border:0;border-radius:10px;background:var(--hot);color:#fff}
+button.alt{background:var(--panel);border:2px solid var(--sea)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+#bar{width:80%;max-width:320px;height:12px;background:var(--panel);border-radius:6px;overflow:hidden}
+#fill{height:100%;width:0;background:var(--sea)}
+.card{background:var(--panel);border-radius:14px;padding:14px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+input[type=text]{font:inherit;padding:9px;border-radius:8px;border:2px solid #2a4a50;background:#0c1618;color:var(--fg);text-align:center}
+.row{display:flex;gap:8px;justify-content:center;align-items:center}
+.row label{flex:1;text-align:left}
+.sw{width:40px;height:40px;border-radius:50%;border:3px solid transparent;padding:0}
+.sel{border-color:#fff}
+.seg{flex:1;padding:9px 4px;font-size:15px}
+.seg.sel{background:var(--sea);color:#06201d;border-color:var(--sea)}
+#hero{width:50px;height:90px;position:relative;margin:0 auto}
+#hero i{position:absolute;left:9px;top:0;width:32px;height:32px;border-radius:50%;background:#f0c8a0}
+#hero b{position:absolute;left:0;top:36px;width:50px;height:54px;border-radius:8px;background:var(--hot)}
+@media (orientation:landscape){#lobby{flex-direction:row;flex-wrap:wrap}}
+#hud{display:none;position:absolute;inset:0;z-index:4;pointer-events:none}
+#hud.on{display:block}
+#top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);left:12px;right:12px;display:flex;justify-content:space-between;font-weight:800;text-shadow:0 1px 3px #000}
+#hp{position:absolute;left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:34%;height:12px;background:#0008;border-radius:6px;overflow:hidden}
+#hpf{height:100%;width:100%;background:var(--sea)}
+#cross{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px;border:2px solid #fff;border-radius:50%;opacity:.8}
+#cross.hit{border-color:var(--hot);transform:scale(1.5)}
+#dmg{position:absolute;inset:0;background:radial-gradient(transparent 40%,#f00);opacity:0;transition:opacity .3s}
+#msg{position:absolute;top:22%;width:100%;text-align:center;font-size:40px;font-weight:900;text-shadow:0 2px 6px #000}
+.act{position:absolute;border-radius:50%;background:#ff6a2bcc;border:3px solid #fff;pointer-events:auto;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;touch-action:none}
+#fire{right:22px;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);width:84px;height:84px}
+#jump{right:122px;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);width:60px;height:60px;background:#19c3b1cc}
+#ammo{position:absolute;right:26px;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);font-weight:800;font-size:20px;text-shadow:0 1px 3px #000}
+#stick{position:absolute;width:90px;height:90px;margin:-45px;border-radius:50%;border:2px solid #fff8;display:none}
+#fps{position:absolute;top:34px;left:12px;font:12px monospace;opacity:.8}
+#rot{display:none;position:absolute;inset:0;z-index:9;background:#0c1618ee;align-items:center;justify-content:center;font-size:22px;font-weight:800;text-align:center;padding:30px}
+@media (orientation:portrait){body.playing:not(.f) #rot{display:flex}}
+html.force{position:fixed;top:0;left:100%;width:100vh;height:100vw;transform-origin:top left;transform:rotate(90deg)}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div class="scr on" id="cover">
+<h1>BF<span>: GO</span></h1>
+<p class="sub">Batalha 3D de sobrevivência</p>
+<button id="tap" class="blink">Toque para começar</button>
+</div>
+
+<div class="scr" id="perm">
+<div class="card"><h2 style="margin:0">Girar a tela?</h2>
+<p class="sub">O jogo fica melhor na horizontal. Vamos pedir tela cheia e girar o celular.</p>
+<button id="yes">Permitir</button><button id="no" class="alt">Agora não</button></div>
+</div>
+
+<div class="scr" id="load">
+<h2 style="margin:0">Carregando arena</h2>
+<div id="bar"><div id="fill"></div></div>
+<p class="sub" id="tip"></p>
+</div>
+
+<div class="scr" id="lobby">
+<div class="card">
+<div id="hero"><i></i><b></b></div>
+<input type="text" id="nick" maxlength="12" value="Jogador" aria-label="Seu apelido">
+<div class="row" id="cols"></div>
+<div class="row"><button class="seg alt mode sel" data-n="5">Solo fácil</button><button class="seg alt mode" data-n="9">Solo difícil</button><button class="seg alt mode" data-n="0" data-o="1">Online</button></div>
+</div>
+<div class="card" style="max-width:260px">
+<p class="sub">Melhor partida: <b id="best">0</b> abates</p>
+<p class="sub" id="who" style="font-size:14px"></p>
+<button id="play">Iniciar partida</button>
+<button id="opt" class="alt">Configurações</button>
+</div>
+</div>
+
+<div class="scr" id="cfg">
+<div class="card">
+<h2 style="margin:0">Configurações</h2>
+<div class="row"><label>Gráficos</label></div>
+<div class="row" id="gfx"><button class="seg alt" data-v="baixo">Baixo</button><button class="seg alt" data-v="medio">Médio</button><button class="seg alt" data-v="alto">Alto</button></div>
+<div class="row"><label for="sens">Sensibilidade</label><input type="range" id="sens" min="1" max="10"></div>
+<div class="row"><label for="fov">Campo de visão</label><input type="range" id="fov" min="60" max="100"></div>
+<div class="row"><label for="snd">Sons</label><input type="checkbox" id="snd"></div>
+<div class="row"><label for="vib">Vibração</label><input type="checkbox" id="vib"></div>
+<div class="row"><label for="fpsb">Mostrar FPS</label><input type="checkbox" id="fpsb"></div>
+<button id="cfgok">Salvar e voltar</button>
+</div>
+</div>
+
+<div class="scr" id="end">
+<h1 id="etitle" style="margin:0;font-size:48px"></h1>
+<p class="sub" id="etext"></p>
+<button id="back">Voltar ao lobby</button>
+</div>
+
+<div id="hud">
+<div id="top"><span id="left"></span><span id="kills"></span></div>
+<div id="fps"></div>
+<div id="dmg"></div><div id="cross"></div><div id="msg"></div>
+<div id="stick"></div>
+<div id="ammo"></div>
+<div id="hp"><div id="hpf"></div></div>
+<div class="act" id="jump" data-b="jump">PULO</div>
+<div class="act" id="fire" data-b="fire">FOGO</div>
+<div class="act" id="exit" data-b="exit" style="display:none;top:34px;right:12px;width:56px;height:34px;border-radius:8px;font-size:13px;background:#122428cc">Sair</div>
+</div>
+<div id="rot">Gire o celular para a horizontal</div>
+
+<script src="https://cdn.jsdelivr.net/gh/eoVENEZESZ/bf-go@main/game.js"></script>
+</body>
+  </html>
