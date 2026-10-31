@@ -1,0 +1,1 @@
+{"name":"bf-go","version":"1.0.0","private":true,"scripts":{"start":"node server.js"},"dependencies":{"pg":"^8.13.0","ws":"^8.18.0"},"engines":{"node":">=18"}}
